@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: repair-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - repair-network
+    depends_on:
+      - db
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=repair_db
+      - DB_USERNAME=repair_user
+      - DB_PASSWORD=repair_pass
+
+  web:
+    image: nginx:alpine
+    container_name: repair-web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - repair-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: repair-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: repair_db
+      MYSQL_USER: repair_user
+      MYSQL_PASSWORD: repair_pass
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - repair-mysql-data:/var/lib/mysql
+    networks:
+      - repair-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  repair-network:
+    driver: bridge
+
+volumes:
+  repair-mysql-data:
+
+

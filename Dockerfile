@@ -81,11 +81,9 @@ RUN composer dump-autoload --optimize && \
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Optimize Laravel
-RUN php artisan optimize && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+# Note: We do NOT cache config/routes/views during build because Render provides
+# environment variables at runtime that differ from the build .env file.
+# Laravel will use the runtime env vars and performance is acceptable without caching.
 
 # Expose port (Render uses PORT environment variable)
 EXPOSE 8080

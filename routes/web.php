@@ -1,20 +1,30 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Public\RequestController as PublicRequestController;
+use App\Http\Controllers\Dispatcher\RequestController as DispatcherController;
+use App\Http\Controllers\Master\RequestController as MasterController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Публичная форма
+Route::get('/', [PublicRequestController::class, 'create'])->name('requests.create');
+Route::post('/requests', [PublicRequestController::class, 'store'])->name('requests.store');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth'])->group(function () {
+    // Диспетчер
+    Route::middleware(['role:dispatcher'])->prefix('dispatcher')->name('dispatcher.')->group(function () {
+        Route::get('/requests', [DispatcherController::class, 'index'])->name('requests.index');
+        Route::get('/requests/{request}', [DispatcherController::class, 'show'])->name('requests.show');
+        Route::patch('/requests/{request}/assign', [DispatcherController::class, 'assign'])->name('requests.assign');
+        Route::patch('/requests/{request}/cancel', [DispatcherController::class, 'cancel'])->name('requests.cancel');
+    });
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Мастер
+    Route::middleware(['role:master'])->prefix('master')->name('master.')->group(function () {
+        Route::get('/requests', [MasterController::class, 'index'])->name('requests.index');
+        Route::get('/requests/{request}', [MasterController::class, 'show'])->name('requests.show');
+        Route::patch('/requests/{request}/take', [MasterController::class, 'take'])->name('requests.take');
+        Route::patch('/requests/{request}/complete', [MasterController::class, 'complete'])->name('requests.complete');
+    });
 });
 
 require __DIR__.'/auth.php';

@@ -39,12 +39,14 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'user', // <--- ДОБАВЛЕНА РОЛЬ
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // ИСПРАВЛЕНО: редирект на главную вместо dashboard
+        return redirect()->route('requests.create');
     }
 }

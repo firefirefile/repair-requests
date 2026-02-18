@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -44,5 +45,19 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the appropriate home route based on user role.
+     *
+     * @return string
+     */
+    public function homeRoute(): string
+    {
+        return match($this->role) {
+            'dispatcher' => '/dispatcher/requests',
+            'master' => '/master/requests',
+            default => '/',
+        };
     }
 }

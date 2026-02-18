@@ -78,7 +78,8 @@ RUN composer dump-autoload --optimize && \
     php artisan package:discover --ansi
 
 # Set proper permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Optimize Laravel
 RUN php artisan optimize && \

@@ -4,7 +4,7 @@ services:
     env: docker
     dockerfilePath: Dockerfile
     buildCommand: composer install --no-dev && php artisan optimize && php artisan migrate --force && php artisan storage:link
-    startCommand: php artisan serve --host=0.0.0.0 --port=8080
+    startCommand: php -S 0.0.0.0:$PORT -t public
     envVars:
       - key: APP_ENV
         value: production

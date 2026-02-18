@@ -15,8 +15,21 @@ FROM composer:latest as composer_builder
 
 WORKDIR /build
 
+# Copy all application files needed for composer install
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+COPY artisan ./
+COPY app/ ./app/
+COPY bootstrap/ ./bootstrap/
+COPY config/ ./config/
+COPY database/ ./database/
+COPY public/ ./public/
+COPY resources/ ./resources/
+COPY routes/ ./routes/
+COPY storage/ ./storage/
+COPY .env.example ./
+
+# Install dependencies without running scripts (artisan not fully available yet)
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
 # Production stage
 FROM php:8.2-fpm
@@ -60,8 +73,9 @@ COPY --from=node_builder /build/public/build ./public/build
 # Copy vendor dependencies from composer_builder
 COPY --from=composer_builder /build/vendor ./vendor
 
-# Generate optimized autoloader
-RUN composer dump-autoload --optimize
+# Generate optimized autoloader and discover packages
+RUN composer dump-autoload --optimize && \
+    php artisan package:discover --ansi
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache

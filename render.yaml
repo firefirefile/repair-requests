@@ -3,7 +3,7 @@ services:
     name: repair-requests
     env: docker
     dockerfilePath: Dockerfile
-    buildCommand: composer install --no-dev && php artisan optimize
+    buildCommand: composer install --no-dev && php artisan optimize && php artisan migrate --force && php artisan storage:link
     startCommand: php artisan serve --host=0.0.0.0 --port=8080
     envVars:
       - key: APP_ENV

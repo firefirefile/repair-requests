@@ -12,7 +12,7 @@
 
 ```bash
 # Клонировать репозиторий
-git clone [ссылка на твой репозиторий]
+git clone https://github.com/firefirefile/repair-requests
 cd repair-requests
 
 # Запустить контейнеры (если используешь Colima)

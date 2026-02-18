@@ -5,19 +5,22 @@ services:
     dockerfilePath: Dockerfile
     buildCommand: |
       composer install --no-dev
+    startCommand: |
       cp .env.example .env
+      echo "Waiting for database connection..."
+      until php -r "try { new PDO('mysql:host='.getenv('DB_HOST').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD')); exit(0); } catch (Exception $e) { exit(1); }" 2>/dev/null; do
+        sleep 2
+      done
       php artisan key:generate --force
-      php artisan optimize:clear
       php artisan migrate --force
+      php artisan optimize:clear
       php artisan storage:link
-    startCommand: php -S 0.0.0.0:$PORT -t public
+      php -S 0.0.0.0:$PORT -t public
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: true
-      - key: APP_KEY
-        generateValue: true
       - key: APP_URL
         value: https://repair-requests.onrender.com
       - key: LOG_CHANNEL

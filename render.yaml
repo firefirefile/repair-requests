@@ -1,0 +1,62 @@
+services:
+  - type: web
+    name: repair-requests
+    env: docker
+    dockerfilePath: Dockerfile
+    buildCommand: composer install --no-dev && php artisan optimize
+    startCommand: php artisan serve --host=0.0.0.0 --port=8080
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        value: https://repair-requests.onrender.com
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        fromDatabase:
+          name: repair-requests-db
+          property: host
+      - key: DB_PORT
+        value: 3306
+      - key: DB_DATABASE
+        fromDatabase:
+          name: repair-requests-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: repair-requests-db
+          property: username
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: repair-requests-db
+          property: password
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: MAIL_MAILER
+        value: log
+      - key: MEMCACHED_HOST
+        value: 127.0.0.1
+      - key: REDIS_HOST
+        value: 127.0.0.1
+      - key: REDIS_PASSWORD
+        value: null
+      - key: REDIS_PORT
+        value: 6379
+
+databases:
+  - name: repair-requests-db
+    databaseName: repair_requests
+    user: repair_requests_user
+    plan: free

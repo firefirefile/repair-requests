@@ -51,4 +51,18 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
         $response->assertRedirect('/');
     }
+
+    public function test_users_can_authenticate_with_case_insensitive_email(): void
+    {
+        $user = User::factory()->create(['email' => 'ivan@example.com']);
+
+        // Try logging in with uppercase email
+        $response = $this->post('/login', [
+            'email' => 'Ivan@Example.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect($user->homeRoute());
+    }
 }

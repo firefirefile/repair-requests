@@ -43,4 +43,28 @@ class RequestFactory extends Factory
             'assigned_to' => User::factory()->create(['role' => 'master'])->id,
         ]);
     }
+
+    public function inProgressRequest(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'in_progress',
+            'assigned_to' => User::factory()->create(['role' => 'master'])->id,
+        ]);
+    }
+
+    public function doneRequest(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'done',
+            'assigned_to' => User::factory()->create(['role' => 'master'])->id,
+        ]);
+    }
+
+    public function canceledRequest(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'canceled',
+            'assigned_to' => null,
+        ]);
+    }
 }

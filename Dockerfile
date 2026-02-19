@@ -1,37 +1,4 @@
-# Builder stage
-FROM node:20-alpine as node_builder
-
-WORKDIR /build
-
-COPY package.json package-lock.json ./
-RUN npm ci
-
-COPY resources/ ./resources/
-COPY vite.config.js ./
-RUN npm run build
-
-# Composer stage
-FROM composer:latest as composer_builder
-
-WORKDIR /build
-
-# Copy all application files needed for composer install
-COPY composer.json composer.lock ./
-COPY artisan ./
-COPY app/ ./app/
-COPY bootstrap/ ./bootstrap/
-COPY config/ ./config/
-COPY database/ ./database/
-COPY public/ ./public/
-COPY resources/ ./resources/
-COPY routes/ ./routes/
-COPY storage/ ./storage/
-COPY .env.example ./
-
-# Install dependencies without running scripts (artisan not fully available yet)
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
-
-# Production stage
+# Local development Dockerfile for Laravel
 FROM php:8.2-fpm
 
 # Install system dependencies
@@ -45,18 +12,20 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libpq-dev \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install \
     pdo_mysql \
+    pdo_pgsql \
     mbstring \
     exif \
     pcntl \
     bcmath \
     gd \
-    zip \
-    pdo_pgsql
+    zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -67,26 +36,18 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
-# Copy built assets from node_builder
-COPY --from=node_builder /build/public/build ./public/build
+# Install PHP dependencies (including dev packages)
+RUN composer install
 
-# Copy vendor dependencies from composer_builder
-COPY --from=composer_builder /build/vendor ./vendor
+# Build frontend assets
+RUN npm install && npm run build
 
-# Generate optimized autoloader and discover packages
-RUN composer dump-autoload --optimize && \
-    php artisan package:discover --ansi
-
-# Set proper permissions
+# Set proper permissions for storage and cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Note: We do NOT cache config/routes/views during build because Render provides
-# environment variables at runtime that differ from the build .env file.
-# Laravel will use the runtime env vars and performance is acceptable without caching.
-
-# Expose port (Render uses PORT environment variable)
+# Expose port for Laravel development server
 EXPOSE 8080
 
-# Start Laravel server
-CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+# Start Laravel development server
+CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=8080"]
